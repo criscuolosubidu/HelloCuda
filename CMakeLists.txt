@@ -10,6 +10,7 @@ add_executable(
         ${CUDA_BASICS}
         src/kernels/kernels.h
         src/cuda-basics/CudaBasics.h
+        src/kernels/cuda_memory.h
 )
 
 
