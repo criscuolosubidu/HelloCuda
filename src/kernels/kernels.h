@@ -8,5 +8,6 @@
 void launch_kernel1();
 void launch_kernel2();
 void vector_add_1d();
+void vector_add_3d();
 
 #endif //KERNELS_H

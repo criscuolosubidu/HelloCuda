@@ -6,5 +6,6 @@
 int main()
 {
     vector_add_1d();
+    vector_add_3d();
     return 0;
 }
