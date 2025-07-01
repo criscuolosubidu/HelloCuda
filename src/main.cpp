@@ -5,7 +5,6 @@
 
 int main()
 {
-    vector_add_1d();
-    vector_add_3d();
+    matrix_mul();
     return 0;
 }
