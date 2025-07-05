@@ -5,6 +5,6 @@
 
 int main()
 {
-    NvtxMatmul();
+    compareIncrementCounter();
     return 0;
 }

@@ -7,6 +7,8 @@ static constexpr int BLOCK_SIZE = 32;
 static constexpr int MAXN = 2048;
 
 // this file just for test nsys
+// nvcc -o nvtx_matmul nvtx_matmul.cu -lnvToolsExt
+// nsys profile --stats=true nvtx_matmul
 
 __global__ void matrixMulKernel(const float* A, const float* B, float* C, int N)
 {
