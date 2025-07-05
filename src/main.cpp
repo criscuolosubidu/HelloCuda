@@ -5,6 +5,6 @@
 
 int main()
 {
-    matrix_mul();
+    NvtxMatmul();
     return 0;
 }

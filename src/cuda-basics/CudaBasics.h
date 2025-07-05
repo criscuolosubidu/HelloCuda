@@ -6,5 +6,6 @@
 #define CUDABASICS_H
 
 void cuda_basics_01_idxing();
+void NvtxMatmul();
 
 #endif //CUDABASICS_H

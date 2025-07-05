@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <iostream>
 #include "cuda_memory.h"
 #include <vector>
