@@ -5,6 +5,10 @@
 
 int main()
 {
-    compareIncrementCounter();
+    auto result = streamBasicsDemo();
+    if (result != EXIT_SUCCESS) {
+        std::cout << "Stream BasicsDemo failed with error. " << std::endl;
+    }
+    std::cout << __cplusplus << std::endl;
     return 0;
 }

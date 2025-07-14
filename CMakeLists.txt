@@ -13,10 +13,15 @@ add_executable(
         src/kernels/cuda_memory.h
 )
 
+add_compile_options(/std:c++20)
 
-set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std=c++20 -Wall -Xcompiler")
+set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler -Wall")
 
 set_target_properties(hello_cuda PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

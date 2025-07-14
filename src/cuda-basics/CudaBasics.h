@@ -7,5 +7,6 @@
 
 void cuda_basics_01_idxing();
 void NvtxMatmul();
+int streamBasicsDemo();
 
 #endif //CUDABASICS_H
