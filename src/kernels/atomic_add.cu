@@ -35,7 +35,6 @@ void compareIncrementCounter()
 
     std::cout << "Non-atomic counter value : " << h_counterNonAtomic << std::endl;
     std::cout << "Atomic counter value : " << h_counterAtomic << std::endl;
-
     cudaFree(d_counterNonAtomic);
     cudaFree(d_counterAtmoic);
 }
