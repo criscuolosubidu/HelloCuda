@@ -87,7 +87,7 @@ __global__ void elementwise_add_f16x8_kernel(half *a, half *b, half *c, int N) {
     }
 }
 
-//
+// 向量化加载，非常trick！
 __global__ void elementwise_add_f16x8_pack_kernel(half *a, half *b, half *c, int N) {
     int idx = 8 * (blockIdx.x * blockDim.x + threadIdx.x);
     half pack_a[8], pack_b[8], pack_c[8];
