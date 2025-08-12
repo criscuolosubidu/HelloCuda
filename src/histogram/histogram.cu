@@ -3,8 +3,6 @@
 #include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <torch/extension.h>
-#include <torch/types.h>
 #include <tuple>
 #include <vector>
 

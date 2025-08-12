@@ -3,11 +3,18 @@ project(hello_cuda LANGUAGES CXX CUDA)
 
 file(GLOB CUDA_KERNELS "src/kernels/*.cu")
 file(GLOB CUDA_BASICS  "src/cuda-basics/*.cu")
+file(GLOB CUDA_ELEMENTWISE "src/elementwise/elementwise.cu")
+file(GLOB CUDA_HISTOGRAM "src/histogram/histogram.cu")
+file(GLOB CUDA_SIGMOID "src/sigmoid/sigmoid.cu")
+
 add_executable(
         hello_cuda
         src/main.cpp
         ${CUDA_KERNELS}
         ${CUDA_BASICS}
+        ${CUDA_ELEMENTWISE}
+        ${CUDA_HISTOGRAM}
+        ${CUDA_SIGMOID}
         src/kernels/kernels.h
         src/cuda-basics/CudaBasics.h
         src/kernels/cuda_memory.h
