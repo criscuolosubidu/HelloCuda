@@ -6,6 +6,8 @@ file(GLOB CUDA_BASICS  "src/cuda-basics/*.cu")
 file(GLOB CUDA_ELEMENTWISE "src/elementwise/elementwise.cu")
 file(GLOB CUDA_HISTOGRAM "src/histogram/histogram.cu")
 file(GLOB CUDA_SIGMOID "src/sigmoid/sigmoid.cu")
+file(GLOB CUDA_RELU "src/relu/relu.cu")
+file(GLOB CUDA_GELU "src/gelu/gelu.cu")
 
 add_executable(
         hello_cuda
@@ -15,6 +17,8 @@ add_executable(
         ${CUDA_ELEMENTWISE}
         ${CUDA_HISTOGRAM}
         ${CUDA_SIGMOID}
+        ${CUDA_RELU}
+        ${CUDA_GELU}
         src/kernels/kernels.h
         src/cuda-basics/CudaBasics.h
         src/kernels/cuda_memory.h
