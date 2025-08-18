@@ -2,12 +2,13 @@ cmake_minimum_required(VERSION 3.27)  # 建议升级到 3.27 或更高
 project(hello_cuda LANGUAGES CXX CUDA)
 
 file(GLOB CUDA_KERNELS "src/kernels/*.cu")
-file(GLOB CUDA_BASICS  "src/cuda-basics/*.cu")
+file(GLOB CUDA_BASICS "src/cuda-basics/*.cu")
 file(GLOB CUDA_ELEMENTWISE "src/elementwise/elementwise.cu")
 file(GLOB CUDA_HISTOGRAM "src/histogram/histogram.cu")
 file(GLOB CUDA_SIGMOID "src/sigmoid/sigmoid.cu")
 file(GLOB CUDA_RELU "src/relu/relu.cu")
 file(GLOB CUDA_GELU "src/gelu/gelu.cu")
+file(GLOB CUDA_SWISH "src/swish/*.cu")
 
 add_executable(
         hello_cuda
@@ -19,6 +20,8 @@ add_executable(
         ${CUDA_SIGMOID}
         ${CUDA_RELU}
         ${CUDA_GELU}
+        ${CUDA_SWISH}
+
         src/kernels/kernels.h
         src/cuda-basics/CudaBasics.h
         src/kernels/cuda_memory.h
