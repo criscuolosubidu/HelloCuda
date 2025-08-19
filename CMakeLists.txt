@@ -9,6 +9,8 @@ file(GLOB CUDA_SIGMOID "src/sigmoid/sigmoid.cu")
 file(GLOB CUDA_RELU "src/relu/relu.cu")
 file(GLOB CUDA_GELU "src/gelu/gelu.cu")
 file(GLOB CUDA_SWISH "src/swish/*.cu")
+file(GLOB CUDA_HARDSHRINK "src/hardshrink/hardshrink.cu")
+file(GLOB CUDA_EMBEDDING "src/embedding/embedding.cu")
 
 add_executable(
         hello_cuda
@@ -21,7 +23,8 @@ add_executable(
         ${CUDA_RELU}
         ${CUDA_GELU}
         ${CUDA_SWISH}
-
+        ${CUDA_HARDSHRINK}
+        ${CUDA_EMBEDDING}
         src/kernels/kernels.h
         src/cuda-basics/CudaBasics.h
         src/kernels/cuda_memory.h
