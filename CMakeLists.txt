@@ -1,50 +1,46 @@
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.27)  # 建议升级到 3.27 或更高
 project(hello_cuda LANGUAGES CXX CUDA)
 
-set(CUDA_SOURCE_DIRS
-    kernels
-    cuda-basics
-    elementwise
-    histogram
-    sigmoid
-    relu
-    gelu
-    swish
-    hardshrink
-    embedding
-    mat-transpose
-)
-
-set(CUDA_SOURCES "")
-
-foreach(DIR ${CUDA_SOURCE_DIRS})
-    file(GLOB_RECURSE DIR_SOURCES "src/${DIR}/*.cu")
-    list(APPEND CUDA_SOURCES ${DIR_SOURCES})
-endforeach()
-
+file(GLOB CUDA_KERNELS "src/kernels/*.cu")
+file(GLOB CUDA_BASICS "src/cuda-basics/*.cu")
+file(GLOB CUDA_ELEMENTWISE "src/elementwise/elementwise.cu")
+file(GLOB CUDA_HISTOGRAM "src/histogram/histogram.cu")
+file(GLOB CUDA_SIGMOID "src/sigmoid/sigmoid.cu")
+file(GLOB CUDA_RELU "src/relu/relu.cu")
+file(GLOB CUDA_GELU "src/gelu/gelu.cu")
+file(GLOB CUDA_SWISH "src/swish/*.cu")
+file(GLOB CUDA_HARDSHRINK "src/hardshrink/hardshrink.cu")
+file(GLOB CUDA_EMBEDDING "src/embedding/embedding.cu")
+file(GLOB CUDA_MAT_TRANSPOSE "src/mat-transpose/mat_transpose.cu")
 
 add_executable(
-    hello_cuda
-    src/main.cpp
-    ${CUDA_SOURCES}
+        hello_cuda
+        src/main.cpp
+        ${CUDA_KERNELS}
+        ${CUDA_BASICS}
+        ${CUDA_ELEMENTWISE}
+        ${CUDA_HISTOGRAM}
+        ${CUDA_SIGMOID}
+        ${CUDA_RELU}
+        ${CUDA_GELU}
+        ${CUDA_SWISH}
+        ${CUDA_HARDSHRINK}
+        ${CUDA_EMBEDDING}
+        ${CUDA_MAT_TRANSPOSE}
+        src/kernels/kernels.h
+        src/cuda-basics/CudaBasics.h
+        src/kernels/cuda_memory.h
 )
+
+add_compile_options(/std:c++20)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# CUDA 标准设置
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std=c++20 -Wall -Xcompiler")
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2")  不推荐使用这种全局的方式
-
-if(MSVC)
-    target_compile_options(hello_cuda PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler,/Wall>)
-else()
-    target_compile_options(hello_cuda PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler,-Wall>)
-endif()
-
 
 set_target_properties(hello_cuda PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

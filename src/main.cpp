@@ -1,11 +1,12 @@
 #include <iostream>
-#include "kernels/kernels.h"
-#include "cuda-basics/CudaBasics.h"
 
 
 int main()
 {
-    int a = 123;
-    *(&a) = 5;
-    std::cout << a << std::endl;
+    for (int i = 0; i < 32; ++i) {
+        for (int j = 0; j < 32; ++j) {
+            std::cout << "(" << i % 8 + 4 << "," << j * 4 + i / 8 << ")" << ' ';
+        }
+        std::cout << std::endl;
+    }
 }
