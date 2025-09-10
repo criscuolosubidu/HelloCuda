@@ -9,7 +9,7 @@ template<const int kWarpSize = WARP_SIZE>
 __device__ __forceinline__ float warp_reduce_sum_f32(float val) {
 #pragma unroll
     for (int mask = kWarpSize >> 1; mask >= 1; mask >>= 1) {
-        val += __shfl_xor_sync(0xffffffff, val, mask);
+        val += __shfl_xor_sync(0xffffffff, val, mask); // __shfl_xor_sync is a warp-level operation, 硬件自动知道线程所处的warp
     }
     return val;
 }
