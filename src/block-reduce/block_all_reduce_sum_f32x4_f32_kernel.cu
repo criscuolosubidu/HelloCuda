@@ -77,8 +77,8 @@ int main() {
     cudaMemcpy(d_x, h_x.data(), N * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemset(d_y, 0, sizeof(float));
 
-    // block_all_reduce_sum_f32x4_f32_kernel<<<256, 256/4>>>(d_x, d_y, N); // 4.3913 ms
-    block_all_reduce_sum_f32_f32_kernel<<<256, 256>>>(d_x, d_y, N); // 8.3018 ms
+    // block_all_reduce_sum_f32x4_f32_kernel<<<256, 256/4>>>(d_x, d_y, N); // 1.3512 ms
+    block_all_reduce_sum_f32_f32_kernel<<<256, 256>>>(d_x, d_y, N); //  1.4372 ms
 
     cudaDeviceSynchronize();
 
