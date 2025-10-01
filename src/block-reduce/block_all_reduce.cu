@@ -508,7 +508,6 @@ __global__ void block_all_reduce_sum_bf16x8_pack_f32_kernel(__nv_bfloat16 *a,
 }
 
 //  FP8
-//
 template<const int kWarpSize = WARP_SIZE>
 __device__ __forceinline__ half
 warp_reduce_sum_fp8_e4m3_f16(__nv_fp8_storage_t val) {
