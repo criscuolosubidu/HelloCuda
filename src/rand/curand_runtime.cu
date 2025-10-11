@@ -9,6 +9,13 @@
 #include <thread>
 #include <curand.h>
 
+// Scale uniform [0,1) to [min, max)
+__global__ void scale_uniform_kernel(float *data, int N, float min_val, float max_val) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < N) {
+        data[idx] = data[idx] * (max_val - min_val) + min_val;
+    }
+}
 
 int main() {
     constexpr int N = 1073741824; // 2 ^ 30
@@ -29,6 +36,13 @@ int main() {
     curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT);
     curandSetPseudoRandomGeneratorSeed(gen, 1233ULL);
     curandGenerateUniform(gen, d_data, N);
+
+    // choose to scale
+    constexpr float MIN_VAL = 0.0f;
+    constexpr float MAX_VAL = 0.01f;
+    int num_blocks = (N + 255) / 256;
+    scale_uniform_kernel<<<num_blocks, 256>>>(d_data, N, MIN_VAL, MAX_VAL);
+
     cudaMemcpy(h_data, d_data, N * sizeof(float), cudaMemcpyDeviceToHost);
 
     curandDestroyGenerator(gen);
