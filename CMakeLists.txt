@@ -16,6 +16,7 @@ file(GLOB CUDA_BLOCK_REDUCE "src/block-reduce/block_all_reduce.cu")
 file(GLOB CUDA_DOT_PROD "src/dot-product/dot_product.cu")
 file(GLOB CUDA_SOFTMAX "src/softmax/softmax.cu")
 file(GLOB CUDA_ROPE "src/rope/rope.cu")
+file(GLOB CUDA_LAYER_NORM "src/layer-norm/layer_norm.cu")
 
 add_executable(
         hello_cuda
@@ -35,6 +36,7 @@ add_executable(
         ${CUDA_DOT_PROD}
         ${CUDA_SOFTMAX}
         ${CUDA_ROPE}
+        ${CUDA_LAYER_NORM}
         src/kernels/kernels.h
         src/cuda-basics/CudaBasics.h
         src/kernels/cuda_memory.h
