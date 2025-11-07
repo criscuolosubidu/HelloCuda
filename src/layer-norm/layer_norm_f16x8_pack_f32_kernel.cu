@@ -52,21 +52,6 @@ __device__ __forceinline__ float warp_reduce_sum_f16_f32(half val) {
     return val_f32;
 }
 
-// block reduce sum f16 -> f16
-template<const int NUM_THREADS = 256>
-__device__ half block_reduce_sum_f16_f16(half val) {
-    constexpr int NUM_WARPS = (NUM_THREADS + WARP_SIZE - 1) / WARP_SIZE;
-    int warp = threadIdx.x / WARP_SIZE;
-    int lane = threadIdx.x % WARP_SIZE;
-    __shared__ half reduce_sum[NUM_WARPS];
-    val = warp_reduce_sum_f16<WARP_SIZE>(val);
-    if (lane == 0) reduce_sum[warp] = val;
-    __syncthreads();
-    val = lane < NUM_WARPS ? reduce_sum[lane] : __float2half(0.0f);
-    val = warp_reduce_sum_f16<NUM_WARPS>(val); // WARNING: not all the threads get the same correct value, lane >= NUM_WARPS get 0
-    return val;
-}
-
 // block reduce sum f16 -> f32
 template<const int NUM_THREADS = 256>
 __device__ float block_reduce_sum_f32(half val) {
@@ -82,45 +67,37 @@ __device__ float block_reduce_sum_f32(half val) {
     return val_f32;
 }
 
-// N = seqlen * batch, K is the dimension, N * K
-// one block for K, so we need N blocks
-// https://docs.pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html
-template<const int NUM_THREADS = 256>
-__global__ void layer_norm_f16_f16_kernel(half *x, half *y, float g, float b, int N, int K) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    const half epsilon = __float2half(1e-5f);
-    __shared__ half s_mean;
-    __shared__ half s_variance;
-    half value = idx < N * K ? x[idx] : __float2half(0.0f);
-    half sum = block_reduce_sum_f16_f16<NUM_THREADS>(value);
-    if (threadIdx.x == 0) s_mean = sum / __int2half_rn(K); // the first thread to calculate
-    __syncthreads(); // wait until s_mean is ready
-    value = (value - s_mean) * (value - s_mean);
-    value = block_reduce_sum_f16_f16<NUM_THREADS>(value);
-    if (threadIdx.x == 0) s_variance = hrsqrt(__hadd(value / __int2half_rn(K), epsilon));
-    __syncthreads(); // wait until s_variance is ready
-    if (idx < N * K) y[idx] = (x[idx] - s_mean) * s_variance * __float2half(g) + __float2half(b);
-}
-
-template<const int NUM_THREADS = 256 / 2>
-__global__ void layer_norm_f16x2_f16_kernel(half *x, half *y, float g, float b, int N, int K) {
-    int idx = 2 * (blockIdx.x * blockDim.x + threadIdx.x);
-    const half epsilon = __float2half(1e-5f);
-    __shared__ half s_mean;
-    __shared__ half s_variance;
-    half2 reg_x = reinterpret_cast<half2*>(&x[idx * 2])[0];
-    half value = idx * 2 < N * K ? reg_x.x + reg_x.y : __float2half(0.0f);
-    half sum = block_reduce_sum_f16_f16<NUM_THREADS>(value);
-    if (threadIdx.x == 0) s_mean = sum / __int2half_rn(K);
+template<const int NUM_THREADS = 256 / 8>
+__global__ void layer_norm_f16x8_pack_f32_kernel(half *x, half *y, float g, float b, int N, int K) {
+    int idx = 8 * (blockIdx.x * blockDim.x + threadIdx.x);
+    __shared__ float s_mean;
+    __shared__ float s_var;
+    constexpr float eps = 1e-5;
+    half reg_x[8], reg_y[8];
+    reinterpret_cast<float4*>(&reg_x[0])[0] = reinterpret_cast<float4*>(&x[idx])[0];
+    float value = 0.0f;
+#pragma unroll
+    for (int i = 0; i < 8; ++i) {
+        value += idx + i < N * K ? __half2float(reg_x[i]) : 0.0f;
+    }
+    float sum = block_reduce_sum_f32<NUM_THREADS>(value);
+    if (threadIdx.x == 0) s_mean = sum / K;
     __syncthreads();
-    value = idx * 2 < N * K ? (reg_x.x - s_mean) * (reg_x.x - s_mean) + (reg_x.y - s_mean) * (reg_x.y - s_mean) : __float2half(0.0f);
-    value = block_reduce_sum_f16_f16<NUM_THREADS>(value);
-    if (threadIdx.x == 0) s_variance = hrsqrt(__hadd(value / __int2half_rn(K), epsilon));
+    sum = 0.0f;
+#pragma unroll
+    for (int i = 0; i < 8; ++i) {
+        float v_hat = __half2float(reg_x[i]) - s_mean;
+        sum += idx + i < N * K ? v_hat * v_hat : 0.0f;
+    }
+    sum = block_reduce_sum_f32<NUM_THREADS>(sum);
+    if (threadIdx.x == 0) s_var = rsqrtf(sum / K + eps);
     __syncthreads();
-    if (2 * idx < N * K) {
-        reg_x.x = (reg_x.x - s_mean) * s_variance * __float2half(g) + __float2half(b);
-        reg_x.y = (reg_x.y - s_mean) * s_variance * __float2half(g) + __float2half(b);
-        reinterpret_cast<half2*>(&y[idx * 2])[0] = reg_x;
+#pragma unroll
+    for (int i = 0; i < 8; ++i) {
+        reg_y[i] = __float2half((__half2float(reg_x[i]) - s_mean) * s_var * g + b);
+    }
+    if (idx + 7 < N * K) {
+        reinterpret_cast<float4*>(&y[idx])[0] = reinterpret_cast<float4*>(&reg_y[0])[0];
     }
 }
 
@@ -161,21 +138,19 @@ int main() {
 
     static_assert(NUM_THREADS == K, "Kernel implementation requires K == NUM_THREADS");
 
-    const float g = 1.0f;
-    const float b = 0.0f;
-    const size_t num_elements = (size_t)N * K;
-    const size_t size_bytes = num_elements * sizeof(half);
+    constexpr float g = 1.0f;
+    constexpr float b = 0.0f;
+    constexpr auto num_elements = static_cast<size_t>(N * K);
+    constexpr size_t size_bytes = num_elements * sizeof(half);
 
     std::cout << "Running LayerNorm Benchmark..." << std::endl;
     std::cout << "Parameters: N(rows)=" << N << ", K(cols/hidden_size)=" << K << std::endl;
     std::cout << "Number of elements: " << num_elements << ", Size: " << (double)size_bytes / (1024 * 1024) << " MB" << std::endl;
 
-    float *h_x, *h_y_cpu;
-    half *h_x_f16, *h_y_gpu;
-    h_x = new float[num_elements];
-    h_y_cpu = new float[num_elements];
-    h_y_gpu = new half[num_elements];
-    h_x_f16 = new half[num_elements];
+    float *h_x = new float[num_elements];
+    float *h_y_cpu = new float[num_elements];
+    half *h_x_f16 = new half[num_elements];
+    half *h_y_gpu = new half[num_elements];
 
     half *d_x, *d_y;
     CUDA_CHECK(cudaMalloc(&d_x, size_bytes));
@@ -189,7 +164,7 @@ int main() {
 
     CUDA_CHECK(cudaMemcpy(d_x, h_x_f16, size_bytes, cudaMemcpyHostToDevice));
 
-    dim3 blockDim(NUM_THREADS / 2);
+    dim3 blockDim(NUM_THREADS / 8);
     dim3 gridDim(N); // N * K / K = N
 
     std::cout << "Running GPU kernel..." << std::endl;
@@ -200,8 +175,7 @@ int main() {
     int num_runs = 10;
     CUDA_CHECK(cudaEventRecord(start_gpu));
     for (int i = 0; i < num_runs; ++i) {
-        // layer_norm_f16_f16_kernel<NUM_THREADS><<<gridDim, blockDim>>>(d_x, d_y, g, b, N, K);
-        layer_norm_f16x2_f16_kernel<NUM_THREADS / 2><<<gridDim, blockDim>>>(d_x, d_y, g, b, N, K);
+        layer_norm_f16x8_pack_f32_kernel<NUM_THREADS / 8><<<gridDim, blockDim>>>(d_x, d_y, g, b, N, K);
     }
     CUDA_CHECK(cudaEventRecord(stop_gpu));
     CUDA_CHECK(cudaEventSynchronize(stop_gpu));
