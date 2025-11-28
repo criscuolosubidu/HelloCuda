@@ -19,6 +19,7 @@ file(GLOB CUDA_ROPE "src/rope/rope.cu")
 file(GLOB CUDA_LAYER_NORM "src/layer-norm/layer_norm.cu")
 file(GLOB CUDA_RMS_NORM "src/rms-norm/rms_norm.cu")
 file(GLOB CUDA_NMS "src/nms/nms.cu")
+file(GLOB CUDA_SGEMV "src/sgemv/sgemv.cu")
 
 add_executable(
         hello_cuda
@@ -41,6 +42,7 @@ add_executable(
         ${CUDA_LAYER_NORM}
         ${CUDA_RMS_NORM}
         ${CUDA_NMS}
+        ${CUDA_SGEMV}
         src/kernels/kernels.h
         src/cuda-basics/CudaBasics.h
         src/kernels/cuda_memory.h
