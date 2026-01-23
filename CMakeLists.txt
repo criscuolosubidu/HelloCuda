@@ -23,6 +23,7 @@ file(GLOB CUDA_SGEMV "src/sgemv/sgemv.cu")
 file(GLOB CUDA_HGEMV "src/hgemv/hgemv.cu")
 file(GLOB CUDA_SGEMM "src/sgemm/sgemm.cu")
 file(GLOB CUDA_SGEMM_ASYNC "src/sgemm/sgemm_async.cu")
+file(GLOB CUDA_SGEMM_WMMA "src/sgemm/sgemm_wmma_tf32_stage.cu")
 
 add_executable(
         hello_cuda
@@ -49,6 +50,7 @@ add_executable(
         ${CUDA_HGEMV}
         ${CUDA_SGEMM}
         ${CUDA_SGEMM_ASYNC}
+        ${CUDA_SGEMM_WMMA}
         src/kernels/kernels.h
         src/cuda-basics/CudaBasics.h
         src/kernels/cuda_memory.h
